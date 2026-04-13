@@ -1,7 +1,8 @@
 (() => {
   'use strict';
 
-  const API_URL = '/api/rsvp';
+  const API_BASE_URL = (window.API_BASE_URL || '').replace(/\/+$/, '');
+  const API_URL = `${API_BASE_URL}/api/rsvp`;
   const AUTH_KEY = 'admin_token';
 
   let deleteTargetId = null;
@@ -56,17 +57,21 @@
       });
 
       if (res.ok) {
-        setToken(password);
-        showDashboard();
-      } else if (res.status === 401) {
+        const data = await res.json();
+        if (data?.success) {
+          setToken(password);
+          showDashboard();
+          return;
+        }
+      }
+
+      if (res.status === 401) {
         authError.textContent = 'Senha incorreta.';
       } else {
-        setToken(password);
-        showDashboard();
+        authError.textContent = 'Não foi possível validar com a API.';
       }
     } catch {
-      setToken(password);
-      showDashboard();
+      authError.textContent = 'Erro de conexão com a API.';
     } finally {
       authSubmit.disabled = false;
     }
